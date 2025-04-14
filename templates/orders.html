@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الطلبات</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9f9f9;
+            direction: rtl;
+            text-align: right;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+    
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+    
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+        }
+    
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+    
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+    
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+    
+        th {
+            background-color: #f1f1f1;
+        }
+
+        .btn-back {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            display: inline-block;
+            margin: 20px 0;
+        }
+
+        .btn-back:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>الطلبات</h1>
+    </header>
+
+    <!-- زر العودة للصفحة الرئيسية -->
+    <a href="{{ url_for('index') }}" class="btn-back">الرجوع للصفحة الرئيسية</a>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>رقم الطلب</th>
+                <th>اسم العميل</th>
+                <th>رقم الهاتف</th>
+                <th>العنوان</th>
+                <th>المقاس</th>
+                <th>تاريخ الطلب</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.id }}</td>
+                <td>{{ order.customer_name }}</td>
+                <td>{{ order.phone }}</td>
+                <td>{{ order.address }}</td>
+                <td>{{ order.size }}</td>
+                <td>{{ order.order_date }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

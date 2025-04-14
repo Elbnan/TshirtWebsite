@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>تعديل المنتج</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9f9f9;
+            direction: rtl;
+            text-align: right;
+            padding: 30px;
+            margin: 0;
+            color: #333;
+        }
+    
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+    
+        form {
+            background-color: #fff;
+            padding: 25px;
+            max-width: 600px;
+            margin: 30px auto;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+    
+        label {
+            display: block;
+            font-weight: bold;
+            margin: 15px 0 5px;
+        }
+    
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+    
+        textarea {
+            resize: vertical;
+            height: 100px;
+        }
+    
+        button {
+            margin-top: 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    
+        button:hover {
+            background-color: #45a049;
+        }
+    
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            color: #2196F3;
+            text-decoration: none;
+            font-weight: bold;
+            text-align: center;
+            width: 100%;
+        }
+    
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+    
+</head>
+<body>
+    <h1>تعديل التيشيرت</h1>
+    <form action="" method="post">
+        <label>الاسم:</label><br>
+        <input type="text" name="name" value="{{ tshirt.name }}" required><br>
+
+        <label>السعر:</label><br>
+        <input type="number" name="price" value="{{ tshirt.price }}" step="0.01" required><br>
+
+        <label>الوصف:</label><br>
+        <textarea name="description" required>{{ tshirt.description }}</textarea><br>
+
+        <label>المقاسات:</label><br>
+        <input type="text" name="sizes" value="{{ tshirt.sizes }}" required><br><br>
+
+        <button type="submit">حفظ التعديلات</button>
+    </form>
+    <br>
+    <a href="/">العودة</a>
+</body>
+</html>

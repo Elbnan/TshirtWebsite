@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tema Store</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9f9f9;
+            direction: rtl;
+            text-align: right;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2em;
+        }
+
+        header div, header a {
+            font-size: 1em;
+            color: white;
+            margin-top: 10px;
+        }
+
+        header a {
+            color: #f1f1f1;
+            text-decoration: none;
+            margin: 0 5px;
+        }
+
+        header a:hover {
+            text-decoration: underline;
+        }
+
+        .alert {
+            background-color: #ff9800;
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .button-link {
+            display: inline-block;
+            margin: 10px 5px;
+            padding: 10px 20px;
+            background-color: #2196F3;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+
+        .button-link:hover {
+            background-color: #1976D2;
+        }
+
+        hr {
+            margin: 0;
+            border: none;
+            border-top: 2px solid #ccc;
+        }
+
+        div[style*="border:1px solid"] {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        div[style*="border:1px solid"] h2 {
+            color: #333;
+        }
+
+        div[style*="border:1px solid"] p {
+            margin: 5px 0;
+            color: #555;
+        }
+
+        img {
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+
+        a[href^="/order/"] {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 6px 12px;
+            background-color: #2196F3;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+
+        a[href^="/order/"]:hover {
+            background-color: #1976D2;
+        }
+
+        a[href^="/edit/"], a[href^="/delete/"] {
+            color: #777;
+            text-decoration: none;
+        }
+
+        a[href^="/edit/"]:hover, a[href^="/delete/"]:hover {
+            text-decoration: underline;
+        }
+
+        p {
+            font-size: 1em;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Tema Store</h1>
+        <div>
+            {% if session.get('username') %}
+                مرحبًا {{ session['username'] }} | <a href="/logout">تسجيل الخروج</a>
+            {% else %}
+                <a href="/login">تسجيل الدخول</a> | <a href="/signup">إنشاء حساب</a>
+            {% endif %}
+        </div>
+
+        {% if session.get('is_admin') %}
+            <a class="button-link" href="/add">+ إضافة تيشيرت جديد</a>
+            <a class="button-link" href="/orders">عرض الطلبات</a>
+        {% endif %}
+    </header>
+
+    {% if session.get('is_admin') and new_orders_count > 0 %}
+        <div class="alert">
+            لديك {{ new_orders_count }} طلب جديد! <a href="/orders" style="color: #fff; text-decoration: underline;">عرض الطلبات</a>
+        </div>
+    {% endif %}
+
+    <hr>
+
+    {% if tshirts %}
+        {% for tshirt in tshirts %}
+            <div style="border:1px solid #ccc; padding:10px; margin:10px;">
+                <h2>{{ tshirt.name }}</h2>
+                <p>{{ tshirt.description }}</p>
+                <p>السعر: {{ tshirt.price }} جنيه</p>
+                <p>المقاسات المتاحة: {{ tshirt.sizes }}</p>
+                <img src="{{ url_for('static', filename='images/' + tshirt.image_url) }}" width="150"><br>
+                <a href="/order/{{ tshirt.id }}">اطلب الآن</a>
+
+                {% if session.get('is_admin') %}
+                    <br>
+                    <a href="/edit/{{ tshirt.id }}">تعديل</a> |
+                    <a href="/delete/{{ tshirt.id }}" onclick="return confirm('هل أنت متأكد من حذف هذا التيشيرت؟')">حذف</a>
+                {% endif %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>لا توجد تيشيرتات متاحة حالياً.</p>
+    {% endif %}
+</body>
+</html>

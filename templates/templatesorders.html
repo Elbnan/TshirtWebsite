@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>الطلبات</title>
+    <style>
+        body { font-family: Arial; direction: rtl; padding: 20px; background-color: #f9f9f9; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #fff; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: right; }
+        th { background-color: #f0f0f0; }
+        h2 { color: #333; }
+    </style>
+</head>
+<body>
+    <h2>قائمة الطلبات</h2>
+    <table>
+        <tr>
+            <th>رقم الطلب</th>
+            <th>اسم العميل</th>
+            <th>رقم الهاتف</th>
+            <th>العنوان</th>
+            <th>المقاس</th>
+            <th>اسم التيشيرت</th>
+            <th>تاريخ الطلب</th>
+        </tr>
+        {% for order in orders %}
+        <tr>
+            <td>{{ order.id }}</td>
+            <td>{{ order.customer_name }}</td>
+            <td>{{ order.phone }}</td>
+            <td>{{ order.address }}</td>
+            <td>{{ order.size }}</td>
+            <td>{{ order.tshirt_name }}</td>
+            <td>{{ order.order_date }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

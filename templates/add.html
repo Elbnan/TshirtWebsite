@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tema - Add New T-Shirt</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            direction: rtl;
+            text-align: right;
+            margin: 0;
+            padding: 20px;
+        }
+    
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+    
+        header h1 {
+            margin: 0;
+            font-size: 2em;
+        }
+    
+        h2 {
+            color: #333;
+            margin-top: 30px;
+        }
+    
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 20px auto;
+        }
+    
+        label {
+            font-weight: bold;
+            margin-top: 10px;
+            display: block;
+            color: #444;
+        }
+    
+        input[type="text"],
+        input[type="number"],
+        input[type="file"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+    
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+    
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+    
+        button:hover {
+            background-color: #45a049;
+        }
+    
+        a {
+            color: #2196F3;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    
+        a:hover {
+            text-decoration: underline;
+        }
+    
+        .carousel {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    
+        .carousel img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+    
+        .carousel-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    
+        .carousel-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Tema - Tshirt Store</h1>
+    </header>
+    <h2>إضافة تيشيرت جديد</h2>
+    <form action="/add" method="post" enctype="multipart/form-data">
+        <label>الاسم:</label><br>
+        <input type="text" name="name" required><br>
+
+        <label>السعر:</label><br>
+        <input type="number" name="price" step="0.01" required><br>
+
+        <label>الوصف:</label><br>
+        <textarea name="description" required></textarea><br>
+
+        <label>المقاسات (مثلاً: S, M, L):</label><br>
+        <input type="text" name="sizes" required><br>
+
+        <label>صور التيشيرت:</label><br>
+        <input type="file" name="images" accept="image/*" multiple required><br><br>
+
+        <div class="carousel">
+            <!-- Display the selected images in a carousel-like layout -->
+            <div class="carousel-images"></div>
+        </div>
+
+        <button type="submit">إضافة</button>
+    </form>
+    <br>
+    <a href="/">العودة للصفحة الرئيسية</a>
+
+    <script>
+        const imageInput = document.querySelector('input[name="images"]');
+        const carouselContainer = document.querySelector('.carousel-images');
+
+        imageInput.addEventListener('change', function() {
+            carouselContainer.innerHTML = ''; // Clear previous images
+
+            // Display selected images as thumbnails in the carousel
+            Array.from(this.files).forEach(file => {
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                carouselContainer.appendChild(img);
+            });
+        });
+    </script>
+</body>
+</html>
