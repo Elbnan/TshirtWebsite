@@ -71,24 +71,77 @@
             border-top: 2px solid #ccc;
         }
 
-        div[style*="border:1px solid"] {
+        .tshirt-card {
             background-color: #fff;
+            border: 1px solid #ccc;
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 10px;
+            margin: 10px;
         }
 
-        div[style*="border:1px solid"] h2 {
+        .tshirt-card h2 {
             color: #333;
         }
 
-        div[style*="border:1px solid"] p {
+        .tshirt-card p {
             margin: 5px 0;
             color: #555;
         }
 
-        img {
+        .carousel {
+            position: relative;
+            max-width: 300px;
             margin-top: 10px;
+        }
+
+        .carousel img {
+            width: 100%;
             border-radius: 4px;
+            display: none;
+        }
+
+        .carousel img.active {
+            display: block;
+        }
+
+        .carousel .arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+            background-color: rgba(0,0,0,0.5);
+            color: white;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        .carousel .arrow.left {
+            right: 10px;
+        }
+
+        .carousel .arrow.right {
+            left: 10px;
+        }
+
+        .dots {
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        .dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            margin: 2px;
+            background-color: #ccc;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .dot.active {
+            background-color: #4CAF50;
         }
 
         a[href^="/order/"] {
@@ -146,12 +199,28 @@
 
     {% if tshirts %}
         {% for tshirt in tshirts %}
-            <div style="border:1px solid #ccc; padding:10px; margin:10px;">
+            <div class="tshirt-card">
                 <h2>{{ tshirt.name }}</h2>
                 <p>{{ tshirt.description }}</p>
                 <p>السعر: {{ tshirt.price }} جنيه</p>
                 <p>المقاسات المتاحة: {{ tshirt.sizes }}</p>
-                <img src="{{ url_for('static', filename='images/' + tshirt.image_url) }}" width="150"><br>
+
+                {% set image_list = tshirt.image_url.split(',') %}
+                <div class="carousel" id="carousel-{{ loop.index }}">
+                    {% for image in image_list %}
+                        <img src="{{ url_for('static', filename='images/' + image.strip()) }}" class="{{ 'active' if loop.index0 == 0 else '' }}">
+                    {% endfor %}
+                    {% if image_list|length > 1 %}
+                        <div class="arrow right" onclick="nextSlide({{ loop.index }})">&#10094;</div>
+                        <div class="arrow left" onclick="prevSlide({{ loop.index }})">&#10095;</div>
+                        <div class="dots" id="dots-{{ loop.index }}">
+                            {% for dot in image_list %}
+                                <span class="dot {{ 'active' if loop.index0 == 0 else '' }}" onclick="goToSlide({{ loop.index }}, {{ loop.index0 }})"></span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
                 <a href="/order/{{ tshirt.id }}">اطلب الآن</a>
 
                 {% if session.get('is_admin') %}
@@ -164,5 +233,42 @@
     {% else %}
         <p>لا توجد تيشيرتات متاحة حالياً.</p>
     {% endif %}
+
+    <script>
+        const carousels = document.querySelectorAll('.carousel');
+
+        carousels.forEach((carousel, index) => {
+            let currentSlide = 0;
+            const slides = carousel.querySelectorAll('img');
+            const dots = carousel.querySelectorAll('.dot');
+
+            function showSlide(n) {
+                slides.forEach((img, i) => {
+                    img.classList.toggle('active', i === n);
+                    if (dots[i]) dots[i].classList.toggle('active', i === n);
+                });
+                currentSlide = n;
+            }
+
+            window['nextSlide'] = function(id) {
+                if (id !== index + 1) return;
+                const next = (currentSlide + 1) % slides.length;
+                showSlide(next);
+            };
+
+            window['prevSlide'] = function(id) {
+                if (id !== index + 1) return;
+                const prev = (currentSlide - 1 + slides.length) % slides.length;
+                showSlide(prev);
+            };
+
+            window['goToSlide'] = function(id, n) {
+                if (id !== index + 1) return;
+                showSlide(n);
+            };
+
+            showSlide(0);
+        });
+    </script>
 </body>
 </html>
