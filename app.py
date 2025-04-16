@@ -46,10 +46,10 @@ def add():
         sizes = request.form['sizes']
         payment_method = "Cash on delivery"
 
-        images = request.files.getlist('images')  # استخدم 'images' بدل 'image'
+        images = request.files.getlist('images')
         image_filenames = []
 
-        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)  # تأكد من وجود المسار
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
         for image in images:
             if image and image.filename:
@@ -95,10 +95,15 @@ def success():
 def sign_up():
     if request.method == 'POST':
         username = request.form['username']
+        email = request.form['email']
+        phone = request.form['phone']
         password = request.form['password']
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
-        cursor.execute("INSERT INTO Users (username, password, is_admin) VALUES (?, ?, 0)", (username, hashed_password))
+        cursor.execute(
+            "INSERT INTO Users (username, email, phone, password, is_admin) VALUES (?, ?, ?, ?, 0)",
+            (username, email, phone, hashed_password)
+        )
         conn.commit()
         return redirect(url_for('log_in'))
 
@@ -124,7 +129,7 @@ def log_in():
 
     return render_template('log_in.html')
 
-# Admin dashboard (اختياري)
+# Admin dashboard
 @app.route('/admin')
 def admin_dashboard():
     if not session.get('is_admin'):
@@ -146,7 +151,6 @@ def orders():
     """)
     orders = cursor.fetchall()
 
-    # update seen_by_admin to 1
     cursor.execute("UPDATE Orders SET seen_by_admin = 1 WHERE seen_by_admin = 0")
     conn.commit()
 
