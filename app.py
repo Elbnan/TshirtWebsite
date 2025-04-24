@@ -1,35 +1,65 @@
 from flask import Flask, render_template, request, redirect, session, url_for
-import pyodbc
+from flask_sqlalchemy import SQLAlchemy
 import os
 from datetime import datetime
 import hashlib
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
+
+# إعداد مجلد رفع الصور
 app.config['UPLOAD_FOLDER'] = 'static/images'
 app.secret_key = 'secret_key'
 
-# Connect to the database
-conn = pyodbc.connect(
-    'DRIVER={SQL Server};'
-    'SERVER=DESKTOP-VR0FRNK;'
-    'DATABASE=TshirtStore;'
-    'Trusted_Connection=yes;'
-)
-cursor = conn.cursor()
+# إعداد الاتصال بقاعدة بيانات SQLite
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tshirtstore.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+# نموذج قاعدة بيانات TShirts
+class TShirt(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    description = db.Column(db.String(200), nullable=False)
+    sizes = db.Column(db.String(50), nullable=False)
+    payment_method = db.Column(db.String(50), nullable=False)
+    image_url = db.Column(db.String(200), nullable=False)
+
+# نموذج قاعدة بيانات Orders
+class Order(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    tshirt_id = db.Column(db.Integer, db.ForeignKey('t_shirt.id'), nullable=False)
+    customer_name = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(15), nullable=False)
+    address = db.Column(db.String(200), nullable=False)
+    size = db.Column(db.String(20), nullable=False)
+    order_date = db.Column(db.DateTime, default=datetime.utcnow)
+    seen_by_admin = db.Column(db.Boolean, default=False)
+
+# نموذج قاعدة بيانات Users
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    email = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(15), nullable=False)
+    password = db.Column(db.String(200), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)
+
+# إنشاء الجداول في قاعدة البيانات
+with app.app_context():
+    db.create_all()
 
 # Helper function to count new orders
 def get_new_orders_count():
     if session.get('is_admin'):
-        cursor.execute("SELECT COUNT(*) FROM Orders WHERE seen_by_admin = 0")
-        return cursor.fetchone()[0]
+        return Order.query.filter_by(seen_by_admin=False).count()
     return 0
 
 # Home page
 @app.route('/')
 def index():
-    cursor.execute("SELECT * FROM TShirts")
-    tshirts = cursor.fetchall()
+    tshirts = TShirt.query.all()
     new_orders_count = get_new_orders_count()
     return render_template('index.html', tshirts=tshirts, new_orders_count=new_orders_count)
 
@@ -59,9 +89,17 @@ def add():
 
         image_urls = ','.join(image_filenames)
 
-        cursor.execute("INSERT INTO TShirts (name, price, description, sizes, payment_method, image_url) VALUES (?, ?, ?, ?, ?, ?)",
-                       name, price, description, sizes, payment_method, image_urls)
-        conn.commit()
+        new_tshirt = TShirt(
+            name=name,
+            price=price,
+            description=description,
+            sizes=sizes,
+            payment_method=payment_method,
+            image_url=image_urls
+        )
+
+        db.session.add(new_tshirt)
+        db.session.commit()
         return redirect('/')
 
     new_orders_count = get_new_orders_count()
@@ -76,9 +114,17 @@ def order(tshirt_id):
         address = request.form['address']
         size = request.form['size']
 
-        cursor.execute("INSERT INTO Orders (tshirt_id, customer_name, phone, address, size, order_date, seen_by_admin) VALUES (?, ?, ?, ?, ?, ?, 0)",
-                       tshirt_id, customer_name, phone, address, size, datetime.now())
-        conn.commit()
+        new_order = Order(
+            tshirt_id=tshirt_id,
+            customer_name=customer_name,
+            phone=phone,
+            address=address,
+            size=size,
+            order_date=datetime.now()
+        )
+
+        db.session.add(new_order)
+        db.session.commit()
         return redirect('/success')
 
     new_orders_count = get_new_orders_count()
@@ -100,11 +146,16 @@ def sign_up():
         password = request.form['password']
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
-        cursor.execute(
-            "INSERT INTO Users (username, email, phone, password, is_admin) VALUES (?, ?, ?, ?, 0)",
-            (username, email, phone, hashed_password)
+        new_user = User(
+            username=username,
+            email=email,
+            phone=phone,
+            password=hashed_password,
+            is_admin=False
         )
-        conn.commit()
+
+        db.session.add(new_user)
+        db.session.commit()
         return redirect(url_for('log_in'))
 
     return render_template('sign_up.html')
@@ -117,8 +168,7 @@ def log_in():
         password = request.form['password']
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
-        cursor.execute("SELECT * FROM Users WHERE username=? AND password=?", (username, hashed_password))
-        user = cursor.fetchone()
+        user = User.query.filter_by(username=username, password=hashed_password).first()
 
         if user:
             session['user_id'] = user.id
@@ -143,16 +193,11 @@ def orders():
     if not session.get('is_admin'):
         return redirect(url_for('log_in'))
 
-    cursor.execute(""" 
-        SELECT Orders.id, Orders.customer_name, Orders.phone, Orders.address, Orders.size, Orders.order_date, TShirts.name 
-        FROM Orders 
-        JOIN TShirts ON Orders.tshirt_id = TShirts.id 
-        ORDER BY Orders.order_date DESC
-    """)
-    orders = cursor.fetchall()
+    orders = db.session.query(Order, TShirt).join(TShirt).order_by(Order.order_date.desc()).all()
 
-    cursor.execute("UPDATE Orders SET seen_by_admin = 1 WHERE seen_by_admin = 0")
-    conn.commit()
+    for order in orders:
+        order[0].seen_by_admin = True
+    db.session.commit()
 
     new_orders_count = get_new_orders_count()
     return render_template('orders.html', orders=orders, new_orders_count=new_orders_count)
@@ -163,8 +208,7 @@ def edit(tshirt_id):
     if not session.get('is_admin'):
         return redirect(url_for('log_in'))
 
-    cursor.execute("SELECT * FROM TShirts WHERE id=?", (tshirt_id,))
-    tshirt = cursor.fetchone()
+    tshirt = TShirt.query.get(tshirt_id)
 
     if request.method == 'POST':
         name = request.form['name']
@@ -172,10 +216,12 @@ def edit(tshirt_id):
         description = request.form['description']
         sizes = request.form['sizes']
 
-        cursor.execute("""
-            UPDATE TShirts SET name=?, price=?, description=?, sizes=? WHERE id=?
-        """, (name, price, description, sizes, tshirt_id))
-        conn.commit()
+        tshirt.name = name
+        tshirt.price = price
+        tshirt.description = description
+        tshirt.sizes = sizes
+
+        db.session.commit()
         return redirect('/')
 
     new_orders_count = get_new_orders_count()
@@ -187,8 +233,9 @@ def delete(tshirt_id):
     if not session.get('is_admin'):
         return redirect(url_for('log_in'))
 
-    cursor.execute("DELETE FROM TShirts WHERE id=?", (tshirt_id,))
-    conn.commit()
+    tshirt = TShirt.query.get(tshirt_id)
+    db.session.delete(tshirt)
+    db.session.commit()
     return redirect('/')
 
 # Logout route
